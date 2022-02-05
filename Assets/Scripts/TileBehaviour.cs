@@ -17,10 +17,10 @@ public static class TileColormap
         colorMap = new Dictionary<TileValue, Color>((int)TileValue.NumTileValues );
 
         colorMap.Add(TileValue.Minimum, Color.grey);
-        colorMap.Add(TileValue.Eigth, Color.cyan);
-        colorMap.Add(TileValue.Quarter, Color.blue);
-        colorMap.Add(TileValue.Half, Color.green);
-        colorMap.Add(TileValue.Full, Color.yellow);
+        colorMap.Add(TileValue.Eigth, new Color(1, 0.2f, 0));
+        colorMap.Add(TileValue.Quarter, new Color(1, 0.4f, 0));
+        colorMap.Add(TileValue.Half, Color.yellow);
+        colorMap.Add(TileValue.Full, Color.green);
     }
     
     
@@ -32,7 +32,6 @@ public class TileBehaviour : MonoBehaviour
 {
     //variables
     TileValue valueAsEnum = TileValue.Minimum;
-    bool isChecked = false;
     float valueAsFloat = 0f;
 
     //references
@@ -43,7 +42,6 @@ public class TileBehaviour : MonoBehaviour
     //accessors
     public TileValue ValueEnum {get => valueAsEnum; private set => valueAsEnum = value; }
     public float ValueFloat {get => valueAsFloat; private set => valueAsFloat = value; }
-    public bool WasChecked {get => isChecked; private set => isChecked = value;}
 
 
     //functions
@@ -56,16 +54,24 @@ public class TileBehaviour : MonoBehaviour
         { 
             valueAsEnum = range;
             valueAsFloat = actualValue;
-
-            //if its already been revealed, you can change the tile color, (cases: when a revealed tile is being collected)
-            if(isChecked)
-                GetComponent<Image>().color = TileColormap.colorMap[valueAsEnum];
         }
     }
 
+    public void HalveTile()
+    {
+        if(valueAsEnum > TileValue.Minimum)
+        {
+            valueAsEnum -= 1;
+
+            valueAsFloat = (valueAsEnum == TileValue.Minimum)? 0.0f: valueAsFloat *0.5f;
+
+            RevealTileValue();
+        }
+    }
+
+
     public void RevealTileValue()
     {
-        isChecked = true;
         GetComponent<Image>().color = TileColormap.colorMap[valueAsEnum];
     }
 
@@ -73,7 +79,6 @@ public class TileBehaviour : MonoBehaviour
     public void ResetTile()
     {
         valueAsEnum = TileValue.Minimum;
-        isChecked = false;
         valueAsFloat = 0f;
          GetComponent<Image>().color = Color.white;
     }

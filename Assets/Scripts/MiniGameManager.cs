@@ -35,9 +35,9 @@ public class MiniGameManager : MonoBehaviour
     int collectAttempts = 3;
 
     [SerializeField]
-    TMPro.TextMeshProUGUI searchesText, collectionsText;
+    TMPro.TextMeshProUGUI searchesText, collectionsText, resultsText;
 
-
+    delegate void task(TileBehaviour tile);
 
     //functions
     //
@@ -107,18 +107,27 @@ public class MiniGameManager : MonoBehaviour
         { 
             int gold = (int)tiles[coordinate.x, coordinate.y].ValueFloat;
             collectedGold += gold;
+
             tiles[coordinate.x, coordinate.y].SetTileValue(TileValue.Minimum, 0);
+            AffectSurroundingTiles((TileBehaviour) => TileBehaviour.HalveTile(), coordinate.y, coordinate.x, 2);
 
             collectAttempts--;
 
             outgoingMessage.text = "You Collected $" + gold + " in gold in tile " + coordinate;
             collectedGoldText.text = "Gold Collected " + collectedGold;
             collectionsText.text = "Collection Attempts: " + collectAttempts;
+
+            if(collectAttempts == 0)
+            {
+                if(collectedGold > 0)
+                    resultsText.text += " Congrats! you got " + collectedGold + " in total!";
+                else
+                    resultsText.text += " sorry, better luck next time";
+            }
         }
         else if(!inCollectingMode && searchAttempts > 0)
         {
-
-            ScanTiles(coordinate.y, coordinate.x); 
+            AffectSurroundingTiles((TileBehaviour) => TileBehaviour.RevealTileValue(), coordinate.y, coordinate.x, 1 );
             searchAttempts--;
             searchesText.text = "Detection Attempts: " + searchAttempts;
 
@@ -149,7 +158,7 @@ public class MiniGameManager : MonoBehaviour
                 int randomAmount = Random.Range(minMaxValue, maxMaxValue);
                 tiles[x, y].SetTileValue(TileValue.Full, randomAmount);
 
-                SetSurroundingTileValues(x, y, randomAmount);
+                SetSurroundingTileValues(y, x, randomAmount);
             }
             else //if it tries to place a full square on another full square, try it again;
                 i--;
@@ -179,7 +188,7 @@ public class MiniGameManager : MonoBehaviour
                     continue;
 
                 //set the outer columns of the middle rows
-                if(Mathf.Abs(y) != n) 
+                if(Mathf.Abs(y - row) != n) 
                 {
                     if(n + column < rowSize)
                         tiles[column + n, y ].SetTileValue((TileValue)i, gold);
@@ -201,28 +210,34 @@ public class MiniGameManager : MonoBehaviour
         }
     }
 
-
-    //reveal the selected square and the 8 tiles surrounding it
-    void ScanTiles(int row, int column)
+    
+    // YES! i've figured out how to use delegates and lambdas!
+    void AffectSurroundingTiles(task doTask, int row, int column, int distance)
     {
-        //n = max distance from the center
-        int n = 1;
-
-        for(int i = row - n; i <= row + n; i++)
+        for (int i = row - distance; i <= row + distance; i++)
         {
-            if(i < 0 || i >= rowSize)
+            if (i < 0 || i >= rowSize)
                 continue;
 
-            for(int j = column - n; j <= column + n; j++)
+            for (int j = column - distance; j <= column + distance; j++)
             {
-                if( j < 0 || j >= rowSize)
+                if (j < 0 || j >= rowSize)
                     continue;
 
-                tiles[j,i].RevealTileValue();
 
+                //neat
+                doTask(tiles[j,i]);
             }
         }
     }
 
+    void ResetAllTiles()
+    {
+        foreach(TileBehaviour tile in tiles)
+        {
+            tile.ResetTile();
+        }
+        SetUpMiniGame();
+    }
 
 }

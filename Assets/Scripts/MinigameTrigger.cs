@@ -76,6 +76,7 @@ public class MinigameTrigger : MonoBehaviour
         {
             minigamePanel.SetActive(true);
             player.enabled = false;
+
             startTextPrompt.text = "Press Q to quit";
         }
 

@@ -41,4 +41,9 @@ public class PlayerMovement : MonoBehaviour
         }
          rb.velocity  = rb.velocity * 0.9f;
     }
+
+    private void OnDisable()
+    {
+        rb.velocity = Vector3.zero;
+    }
 }
